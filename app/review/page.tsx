@@ -82,9 +82,13 @@ export default function ReviewPage() {
 
   return (
     <main className="flex-1 px-4 py-6 max-w-md mx-auto w-full">
-      <h1 className="text-2xl font-bold">Review your card</h1>
-      <p className="text-sm text-gray-500 mb-4">
-        {player.name} · HCP {player.handicap} · {tee.label}
+      <h1 className="text-2xl font-bold">Review {player.name}&apos;s card</h1>
+      <p className="text-sm text-gray-500 mb-1">
+        HCP {player.handicap} · {tee.label}
+        {player.scorerName && ` · scored by ${player.scorerName}`}
+      </p>
+      <p className="text-sm text-gray-600 mb-4">
+        Go through each hole with {player.name} before you submit. Once submitted, only the organizer can change it.
       </p>
 
       <div className="rounded-xl border overflow-hidden mb-6">
@@ -137,7 +141,7 @@ export default function ReviewPage() {
 
       {!allPlayed && (
         <p className="text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mb-4">
-          You have {18 - played} hole{18 - played === 1 ? "" : "s"} with no score.
+          {18 - played} hole{18 - played === 1 ? "" : "s"} with no score.
           Missing holes count as zero points. Go back and fill them in if needed.
         </p>
       )}
@@ -163,11 +167,10 @@ export default function ReviewPage() {
       {showConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center p-4 z-20">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full space-y-4">
-            <h2 className="text-lg font-bold">Submit final score?</h2>
+            <h2 className="text-lg font-bold">Submit {player.name}&apos;s card?</h2>
             <p className="text-sm text-gray-600">
-              You&apos;re about to submit <b>{total} points</b> as your final score.
-              You won&apos;t be able to edit after this. If you spot a mistake later,
-              message the organizer — they can fix it from their end.
+              You&apos;re about to submit <b>{total} points</b> as {player.name}&apos;s final score.
+              Make sure they&apos;ve seen it. Once submitted, only the organizer can change it.
             </p>
             <div className="flex gap-3">
               <button

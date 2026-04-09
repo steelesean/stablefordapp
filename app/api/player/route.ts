@@ -13,10 +13,13 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
-  const { name, handicap, teeId, prediction } = (body ?? {}) as Record<string, unknown>;
+  const { name, scorerName, handicap, teeId, prediction } = (body ?? {}) as Record<string, unknown>;
 
   if (typeof name !== "string" || !name.trim()) {
-    return NextResponse.json({ error: "Name is required" }, { status: 400 });
+    return NextResponse.json({ error: "Player name is required" }, { status: 400 });
+  }
+  if (typeof scorerName !== "string" || !scorerName.trim()) {
+    return NextResponse.json({ error: "Scorer name is required" }, { status: 400 });
   }
   const hcpNum = typeof handicap === "number" ? handicap : parseFloat(String(handicap ?? ""));
   if (!Number.isFinite(hcpNum) || hcpNum < 0 || hcpNum > 54) {
@@ -35,6 +38,7 @@ export async function POST(req: Request) {
   const player = await createPlayer({
     id: nanoid(10),
     name: name.trim().slice(0, 60),
+    scorerName: scorerName.trim().slice(0, 60),
     handicap: hcpNum,
     teeId: teeId as TeeId,
     prediction: cleanPrediction,

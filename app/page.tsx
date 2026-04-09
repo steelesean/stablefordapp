@@ -22,7 +22,7 @@ export default function LandingPage() {
             Deer Park Golf &amp; Country Club
           </p>
           <p className="text-sm text-gray-500">
-            Stableford. Enter your scores. Reviewed by a partner at the end.
+            Stableford. You&apos;ll enter the scores for a playing partner, and yours will be kept by theirs.
           </p>
         </header>
 
@@ -32,7 +32,7 @@ export default function LandingPage() {
               href="/play"
               className="block w-full py-4 rounded-xl bg-emerald-600 text-white text-lg font-semibold shadow active:scale-[.98]"
             >
-              Resume your round
+              Resume scoring
             </Link>
             <button
               className="text-sm text-gray-500 underline"
@@ -51,12 +51,12 @@ export default function LandingPage() {
             href="/setup"
             className="block w-full py-4 rounded-xl bg-emerald-600 text-white text-lg font-semibold shadow active:scale-[.98]"
           >
-            Enter your scores
+            Start scoring a partner
           </Link>
         )}
 
         <p className="text-xs text-gray-400">
-          Share this link with your playing partners. Everyone enters their own scores.
+          Share this link with your playing partners. Everyone scores for the person next to them.
         </p>
       </div>
     </main>

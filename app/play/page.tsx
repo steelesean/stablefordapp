@@ -174,8 +174,12 @@ export default function PlayPage() {
       <div className="sticky top-0 z-10 bg-emerald-700 text-white shadow">
         <div className="flex items-center justify-between px-4 py-3">
           <div>
-            <p className="text-xs uppercase opacity-80">{player.name}</p>
-            <p className="text-sm">HCP {player.handicap} · {tee.label.split(" ")[0]} tees</p>
+            <p className="text-[10px] uppercase opacity-70 tracking-wider">Scoring for</p>
+            <p className="text-lg font-bold leading-tight">{player.name}</p>
+            <p className="text-[11px] opacity-80">
+              HCP {player.handicap} · {tee.label.split(" ")[0]} tees
+              {player.scorerName && ` · by ${player.scorerName}`}
+            </p>
           </div>
           <div className="text-right">
             <p className="text-xs opacity-80">Total</p>

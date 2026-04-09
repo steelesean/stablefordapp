@@ -16,6 +16,7 @@ interface DbRoundConfigRow {
 interface DbPlayerRow {
   id: string;
   name: string;
+  scorer_name: string;
   handicap: number;
   tee_id: TeeId;
   prediction: string;
@@ -31,6 +32,7 @@ function rowToPlayer(row: DbPlayerRow): Player {
   return {
     id: row.id,
     name: row.name,
+    scorerName: row.scorer_name ?? "",
     handicap: Number(row.handicap),
     teeId: row.tee_id,
     prediction: row.prediction,
@@ -139,6 +141,7 @@ export async function reopenRound(): Promise<RoundConfig> {
 export async function createPlayer(params: {
   id: string;
   name: string;
+  scorerName: string;
   handicap: number;
   teeId: TeeId;
   prediction: string;
@@ -148,6 +151,7 @@ export async function createPlayer(params: {
     const player: Player = {
       id: params.id,
       name: params.name,
+      scorerName: params.scorerName,
       handicap: params.handicap,
       teeId: params.teeId,
       prediction: params.prediction,
@@ -165,6 +169,7 @@ export async function createPlayer(params: {
     .insert({
       id: params.id,
       name: params.name,
+      scorer_name: params.scorerName,
       handicap: params.handicap,
       tee_id: params.teeId,
       prediction: params.prediction,
@@ -260,6 +265,7 @@ export async function adminUpdatePlayer(
   const supabase = getSupabase();
   const row: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (patch.name !== undefined) row.name = patch.name;
+  if (patch.scorerName !== undefined) row.scorer_name = patch.scorerName;
   if (patch.handicap !== undefined) row.handicap = patch.handicap;
   if (patch.teeId !== undefined) row.tee_id = patch.teeId;
   if (patch.prediction !== undefined) row.prediction = patch.prediction;

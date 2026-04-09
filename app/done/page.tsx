@@ -31,15 +31,18 @@ export default function DonePage() {
   return (
     <main className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-4">
       <div className="text-6xl">⛳</div>
-      <h1 className="text-2xl font-bold">Your round is in</h1>
+      <h1 className="text-2xl font-bold">{player.name}&apos;s card is in</h1>
       <p className="text-gray-600">
-        {player.name}, you scored <span className="font-bold text-emerald-700 text-2xl">{total}</span> points.
+        Final score: <span className="font-bold text-emerald-700 text-2xl">{total}</span> points.
       </p>
+      {player.scorerName && (
+        <p className="text-sm text-gray-500">Scored by {player.scorerName}.</p>
+      )}
       <p className="text-sm text-gray-500 max-w-xs">
         Results will be announced once everyone has finished. Good luck!
       </p>
       <p className="text-xs text-gray-400">
-        Spotted a mistake? Message the organizer — they can edit your card.
+        Spotted a mistake? Message the organizer — they can edit the card.
       </p>
     </main>
   );

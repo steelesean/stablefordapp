@@ -10,7 +10,10 @@ export interface RoundConfig {
 
 export interface Player {
   id: string;
+  /** The player being scored. */
   name: string;
+  /** The playing partner who is entering the scores on their phone. */
+  scorerName: string;
   handicap: number;
   teeId: TeeId;
   prediction: string;

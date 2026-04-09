@@ -16,10 +16,13 @@ create table if not exists public.round_config (
 
 -- ------------------------------------------------------------------
 -- players: one row per participant
+--   name        = the player being scored
+--   scorer_name = the playing partner holding the phone and entering scores
 -- ------------------------------------------------------------------
 create table if not exists public.players (
   id            text primary key,
   name          text not null,
+  scorer_name   text not null default '',
   handicap      numeric not null,
   tee_id        text not null,
   prediction    text not null default '',
@@ -30,6 +33,13 @@ create table if not exists public.players (
 );
 
 create index if not exists players_created_at_idx on public.players (created_at);
+
+-- ------------------------------------------------------------------
+-- Migration for existing deployments (pre-scorer field)
+-- Run this once if the players table already exists without scorer_name.
+-- Safe to run multiple times.
+-- ------------------------------------------------------------------
+alter table public.players add column if not exists scorer_name text not null default '';
 
 -- ------------------------------------------------------------------
 -- RLS: enable but define no policies, so only the service role key

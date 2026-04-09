@@ -133,7 +133,8 @@ export default function AdminDashboard({ adminKey, initialConfig, initialPlayers
     const lines = [`${COURSE.name} — Stableford results`];
     ranked.forEach((p) => {
       const suffix = p.submittedAt ? "" : ` (${p.played}/18)`;
-      lines.push(`${p.rank}. ${p.name} — ${p.total} pts${suffix}`);
+      const scorer = p.scorerName ? ` [scored by ${p.scorerName}]` : "";
+      lines.push(`${p.rank}. ${p.name} — ${p.total} pts${suffix}${scorer}`);
     });
     return lines.join("\n");
   }, [ranked]);
@@ -227,7 +228,7 @@ export default function AdminDashboard({ adminKey, initialConfig, initialPlayers
               <thead className="bg-gray-50 text-gray-600 text-left">
                 <tr>
                   <th className="py-2 px-2">#</th>
-                  <th className="py-2 px-1">Name</th>
+                  <th className="py-2 px-1">Player</th>
                   <th className="py-2 px-1 text-center">HCP</th>
                   <th className="py-2 px-1 text-center">Holes</th>
                   <th className="py-2 px-2 text-right">Pts</th>
@@ -237,12 +238,19 @@ export default function AdminDashboard({ adminKey, initialConfig, initialPlayers
               <tbody>
                 {ranked.map((p) => (
                   <tr key={p.id} className="border-t">
-                    <td className="py-2 px-2 text-gray-500">{p.rank}</td>
-                    <td className="py-2 px-1 font-medium">{p.name}</td>
-                    <td className="py-2 px-1 text-center">{p.handicap}</td>
-                    <td className="py-2 px-1 text-center">{p.played}/18</td>
-                    <td className="py-2 px-2 text-right font-bold">{p.total}</td>
-                    <td className="py-2 px-2 text-right text-xs text-gray-500">
+                    <td className="py-2 px-2 text-gray-500 align-top">{p.rank}</td>
+                    <td className="py-2 px-1 align-top">
+                      <div className="font-medium leading-tight">{p.name}</div>
+                      {p.scorerName && (
+                        <div className="text-[11px] text-gray-500 leading-tight">
+                          scored by {p.scorerName}
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-2 px-1 text-center align-top">{p.handicap}</td>
+                    <td className="py-2 px-1 text-center align-top">{p.played}/18</td>
+                    <td className="py-2 px-2 text-right font-bold align-top">{p.total}</td>
+                    <td className="py-2 px-2 text-right text-xs text-gray-500 align-top">
                       {p.submittedAt ? (
                         <span className="text-emerald-700">submitted</span>
                       ) : (

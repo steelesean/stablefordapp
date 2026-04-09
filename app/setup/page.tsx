@@ -7,6 +7,7 @@ import { COURSE, TEE_IDS, type TeeId } from "@/lib/course";
 
 export default function SetupPage() {
   const router = useRouter();
+  const [scorerName, setScorerName] = useState("");
   const [name, setName] = useState("");
   const [handicap, setHandicap] = useState("");
   const [teeId, setTeeId] = useState<TeeId>("white");
@@ -15,6 +16,7 @@ export default function SetupPage() {
   const [error, setError] = useState<string | null>(null);
 
   const canSubmit =
+    scorerName.trim().length > 1 &&
     name.trim().length > 1 &&
     handicap.trim() !== "" &&
     !Number.isNaN(parseFloat(handicap));
@@ -30,6 +32,7 @@ export default function SetupPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: name.trim(),
+          scorerName: scorerName.trim(),
           handicap: parseFloat(handicap),
           teeId,
           prediction: prediction.trim(),
@@ -51,22 +54,40 @@ export default function SetupPage() {
 
   return (
     <main className="flex-1 px-6 py-8 max-w-md mx-auto w-full">
-      <h1 className="text-2xl font-bold mb-1">Let&apos;s get you set up</h1>
-      <p className="text-sm text-gray-500 mb-6">
-        {COURSE.name}. Takes 20 seconds.
+      <h1 className="text-2xl font-bold mb-1">Set up a scorecard</h1>
+      <p className="text-sm text-gray-500 mb-2">
+        {COURSE.name}.
+      </p>
+      <p className="text-sm text-gray-600 mb-6 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">
+        You&apos;re scoring for a playing partner — not yourself. Enter your name, then theirs.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
+          <label className="block text-sm font-medium mb-1" htmlFor="scorerName">
+            Your name <span className="text-gray-400">(the scorer)</span>
+          </label>
+          <input
+            id="scorerName"
+            type="text"
+            autoComplete="name"
+            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-base"
+            placeholder="e.g. Sean Steele"
+            value={scorerName}
+            onChange={(e) => setScorerName(e.target.value)}
+            required
+          />
+        </div>
+
+        <div>
           <label className="block text-sm font-medium mb-1" htmlFor="name">
-            Full name
+            Who are you scoring for? <span className="text-gray-400">(the player)</span>
           </label>
           <input
             id="name"
             type="text"
-            autoComplete="name"
             className="w-full rounded-lg border border-gray-300 px-4 py-3 text-base"
-            placeholder="Jane McGregor"
+            placeholder="e.g. Colin McGregor"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -75,7 +96,7 @@ export default function SetupPage() {
 
         <div>
           <label className="block text-sm font-medium mb-1" htmlFor="handicap">
-            Handicap
+            Their handicap
           </label>
           <input
             id="handicap"
@@ -94,7 +115,7 @@ export default function SetupPage() {
 
         <div>
           <label className="block text-sm font-medium mb-1" htmlFor="tee">
-            Tee
+            Their tee
           </label>
           <select
             id="tee"
@@ -112,13 +133,13 @@ export default function SetupPage() {
 
         <div>
           <label className="block text-sm font-medium mb-1" htmlFor="prediction">
-            Who do you think will win? <span className="text-gray-400">(just for fun)</span>
+            Who do they think will win? <span className="text-gray-400">(just for fun)</span>
           </label>
           <input
             id="prediction"
             type="text"
             className="w-full rounded-lg border border-gray-300 px-4 py-3 text-base"
-            placeholder="Your prediction"
+            placeholder="Their prediction"
             value={prediction}
             onChange={(e) => setPrediction(e.target.value)}
             maxLength={80}
@@ -134,7 +155,7 @@ export default function SetupPage() {
           disabled={!canSubmit || submitting}
           className="w-full py-4 rounded-xl bg-emerald-600 text-white text-lg font-semibold shadow active:scale-[.98] disabled:opacity-50"
         >
-          {submitting ? "Starting…" : "Start round"}
+          {submitting ? "Starting…" : "Start scoring"}
         </button>
       </form>
     </main>
