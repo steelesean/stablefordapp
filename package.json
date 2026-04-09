@@ -11,7 +11,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@upstash/redis": "^1.37.0",
+    "@supabase/supabase-js": "^2.103.0",
     "nanoid": "^5.1.7",
     "next": "16.2.3",
     "react": "19.2.4",
