@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { clearPlayerId, getPlayerId } from "@/lib/client-storage";
-import { COURSE } from "@/lib/course";
 
 export default function LandingPage() {
   const [existingId, setExistingId] = useState<string | null>(null);
@@ -18,12 +17,12 @@ export default function LandingPage() {
     <main className="flex-1 flex flex-col items-center justify-center px-6 py-10 text-center">
       <div className="max-w-sm w-full space-y-8">
         <header className="space-y-2">
+          <h1 className="text-3xl font-bold">The Colin Cup</h1>
           <p className="text-sm uppercase tracking-wider text-emerald-700 font-semibold">
-            Weekend Stableford
+            Deer Park Golf &amp; Country Club
           </p>
-          <h1 className="text-3xl font-bold">{COURSE.name}</h1>
           <p className="text-sm text-gray-500">
-            Enter your own scores, hole by hole, on your phone.
+            Stableford. Enter your scores. Reviewed by a partner at the end.
           </p>
         </header>
 
