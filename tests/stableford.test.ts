@@ -10,7 +10,7 @@ import {
 
 // Deer Park white tees for sanity (par 72)
 const PAR = [4, 5, 3, 4, 4, 4, 3, 5, 4, 3, 4, 5, 4, 5, 4, 3, 4, 4] as const;
-const SI  = [12, 8, 4, 2, 10, 6, 16, 18, 14, 11, 3, 7, 17, 1, 15, 5, 13, 9] as const;
+const SI  = [15, 5, 9, 1, 7, 3, 11, 13, 17, 14, 2, 16, 18, 4, 12, 10, 6, 8] as const;
 
 describe("strokesOnHole", () => {
   it("scratch player gets no strokes", () => {
@@ -114,7 +114,7 @@ describe("breakdown / totalPoints", () => {
     const scores = PAR.slice() as number[];
     const rows = breakdown(scores, PAR, SI, 0);
     expect(rows).toHaveLength(18);
-    expect(rows[0]).toMatchObject({ hole: 1, par: 4, strokeIndex: 12, gross: 4, points: 2 });
+    expect(rows[0]).toMatchObject({ hole: 1, par: 4, strokeIndex: 15, gross: 4, points: 2 });
   });
 });
 

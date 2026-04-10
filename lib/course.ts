@@ -29,7 +29,7 @@ export interface Course {
 const HOLE_NAMES = [
   "Royal Stag",
   "Stables",
-  "Muir Tap",
+  "Muir Trap",
   "Long Park",
   "Jim's Ain",
   "Deer's Run",
@@ -49,11 +49,11 @@ const HOLE_NAMES = [
 
 // Men's tees (White/Yellow/Black): par 72, same SI across all three
 const MENS_PAR = [4, 5, 3, 4, 4, 4, 3, 5, 4, 3, 4, 5, 4, 5, 4, 3, 4, 4] as const;
-const MENS_SI  = [12, 8, 4, 2, 10, 6, 16, 18, 14, 11, 3, 7, 17, 1, 15, 5, 13, 9] as const;
+const MENS_SI  = [15, 5, 9, 1, 7, 3, 11, 13, 17, 14, 2, 16, 18, 4, 12, 10, 6, 8] as const;
 
-// Red tees (ladies): par 73, different SI
-const RED_PAR  = [4, 5, 3, 5, 4, 4, 3, 5, 4, 3, 4, 5, 4, 5, 4, 3, 4, 4] as const;
-const RED_SI   = [12, 8, 6, 14, 4, 2, 18, 16, 10, 11, 3, 13, 1, 7, 15, 5, 17, 9] as const;
+// Red tees (ladies): par 74, different SI
+const RED_PAR  = [4, 5, 3, 5, 4, 4, 3, 5, 4, 3, 4, 5, 4, 5, 4, 3, 5, 4] as const;
+const RED_SI   = [14, 4, 16, 12, 6, 2, 18, 8, 10, 15, 5, 3, 11, 1, 7, 13, 17, 9] as const;
 
 const sum = (arr: readonly number[]) => arr.reduce((a, b) => a + b, 0);
 
