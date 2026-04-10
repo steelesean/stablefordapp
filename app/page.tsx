@@ -17,7 +17,7 @@ export default function LandingPage() {
     <main className="flex-1 flex flex-col items-center justify-center px-6 py-10 text-center">
       <div className="max-w-sm w-full space-y-8">
         <header className="space-y-2">
-          <h1 className="text-3xl font-bold">The Colin Cup</h1>
+          <h1 className="text-4xl font-extrabold" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>The Colin Cup</h1>
           <p className="text-sm uppercase tracking-wider text-emerald-700 font-semibold">
             Deer Park Golf &amp; Country Club
           </p>
@@ -55,9 +55,6 @@ export default function LandingPage() {
           </Link>
         )}
 
-        <p className="text-xs text-gray-400">
-          Share this link with your playing partners. Everyone scores for the person next to them.
-        </p>
       </div>
     </main>
   );
