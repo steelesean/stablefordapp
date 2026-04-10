@@ -19,10 +19,10 @@ export default function LandingPage() {
         <header className="space-y-2">
           <div className="text-5xl">🏆</div>
           <h1 className="text-4xl font-extrabold" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>The Colin Cup</h1>
-          <p className="text-sm uppercase tracking-wider text-emerald-700 font-semibold">
+          <p className="text-sm uppercase tracking-wider text-emerald-700 dark:text-emerald-400 font-semibold">
             Deer Park Golf &amp; Country Club
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Stableford. You&apos;ll enter the scores for a playing partner, and yours will be kept by theirs.
           </p>
         </header>
@@ -36,7 +36,7 @@ export default function LandingPage() {
               Resume scoring
             </Link>
             <button
-              className="text-sm text-gray-500 underline"
+              className="text-sm text-gray-500 dark:text-gray-400 underline"
               onClick={() => {
                 if (confirm("Start over? Your saved progress on this phone will be cleared.")) {
                   clearPlayerId();

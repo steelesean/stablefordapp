@@ -111,7 +111,7 @@ export default function PlayPage() {
   if (error || !player) {
     return (
       <main className="flex-1 flex flex-col items-center justify-center gap-3 px-6 text-center">
-        <p className="text-red-600">{error ?? "Something went wrong"}</p>
+        <p className="text-red-600 dark:text-red-400">{error ?? "Something went wrong"}</p>
         <button
           className="underline"
           onClick={() => {
@@ -171,7 +171,7 @@ export default function PlayPage() {
   return (
     <main className="flex-1 flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-emerald-700 text-white shadow">
+      <div className="sticky top-0 z-10 bg-emerald-700 dark:bg-emerald-900 text-white shadow">
         <div className="flex items-center justify-between px-4 py-3">
           <div>
             <p className="text-[10px] uppercase opacity-70 tracking-wider">Scoring for</p>
@@ -201,9 +201,9 @@ export default function PlayPage() {
       {/* Hole body */}
       <div className="flex-1 px-6 py-6 flex flex-col items-center gap-6">
         <div className="text-center">
-          <p className="text-sm uppercase text-gray-500">Hole {holeIdx + 1} of 18</p>
+          <p className="text-sm uppercase text-gray-500 dark:text-gray-400">Hole {holeIdx + 1} of 18</p>
           <h2 className="text-2xl font-bold">{holeName}</h2>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             Par {par} · Stroke Index {si}
           </p>
         </div>
@@ -213,25 +213,25 @@ export default function PlayPage() {
             type="button"
             aria-label="Decrease"
             onClick={() => adjust(-1)}
-            className="w-16 h-16 rounded-full bg-gray-100 text-3xl font-bold active:scale-95"
+            className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 text-3xl font-bold active:scale-95"
           >
             –
           </button>
           <div className="w-24 text-center">
-            <p className="text-xs text-gray-500">Strokes</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Strokes</p>
             <p className="text-6xl font-bold tabular-nums">{displayScore}</p>
           </div>
           <button
             type="button"
             aria-label="Increase"
             onClick={() => adjust(+1)}
-            className="w-16 h-16 rounded-full bg-gray-100 text-3xl font-bold active:scale-95"
+            className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 text-3xl font-bold active:scale-95"
           >
             +
           </button>
         </div>
 
-        <div className="h-6 text-sm text-emerald-700 font-semibold">
+        <div className="h-6 text-sm text-emerald-700 dark:text-emerald-400 font-semibold">
           {gross != null && (
             <span>
               {holePts} pt{holePts === 1 ? "" : "s"}
@@ -249,7 +249,7 @@ export default function PlayPage() {
               className={`w-12 h-12 rounded-full border text-lg font-semibold ${
                 gross === v
                   ? "bg-emerald-600 text-white border-emerald-600"
-                  : "bg-white border-gray-300 text-gray-700"
+                  : "bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200"
               }`}
             >
               {v}
@@ -259,12 +259,12 @@ export default function PlayPage() {
       </div>
 
       {/* Footer nav */}
-      <div className="sticky bottom-0 bg-white border-t px-4 py-3 flex gap-3">
+      <div className="sticky bottom-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 px-4 py-3 flex gap-3">
         <button
           type="button"
           onClick={() => setHoleIdx(Math.max(0, holeIdx - 1))}
           disabled={holeIdx === 0}
-          className="flex-1 py-3 rounded-xl bg-gray-100 font-semibold disabled:opacity-40"
+          className="flex-1 py-3 rounded-xl bg-gray-100 dark:bg-gray-800 font-semibold disabled:opacity-40"
         >
           Back
         </button>

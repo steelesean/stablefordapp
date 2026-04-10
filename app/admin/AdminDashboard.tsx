@@ -156,12 +156,14 @@ export default function AdminDashboard({ adminKey, initialConfig, initialPlayers
       <header className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold">Organizer dashboard</h1>
-          <p className="text-sm text-gray-500">{COURSE.name}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{COURSE.name}</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <span
             className={`text-xs font-semibold px-2 py-1 rounded-full ${
-              config.status === "open" ? "bg-emerald-100 text-emerald-800" : "bg-gray-200 text-gray-700"
+              config.status === "open"
+                ? "bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200"
+                : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
             }`}
           >
             {config.status === "open" ? "Round open" : "Round closed"}
@@ -192,7 +194,7 @@ export default function AdminDashboard({ adminKey, initialConfig, initialPlayers
           <button
             type="button"
             onClick={refresh}
-            className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 font-semibold"
+            className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 font-semibold"
           >
             Refresh
           </button>
@@ -207,16 +209,16 @@ export default function AdminDashboard({ adminKey, initialConfig, initialPlayers
                 post({ action: "reset" });
               }
             }}
-            className="text-xs px-3 py-1.5 rounded-lg border border-red-300 text-red-600 font-semibold"
+            className="text-xs px-3 py-1.5 rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 font-semibold"
           >
             Reset round
           </button>
         </div>
       </header>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-gray-600 dark:text-gray-400">
         {players.length} player{players.length === 1 ? "" : "s"} joined · {submittedCount} submitted
         {allSubmitted && " · all in!"}
       </p>
@@ -230,17 +232,17 @@ export default function AdminDashboard({ adminKey, initialConfig, initialPlayers
           <button
             type="button"
             onClick={() => copyText(resultsText)}
-            className="text-xs text-emerald-700 underline"
+            className="text-xs text-emerald-700 dark:text-emerald-400 underline"
           >
             Copy as text
           </button>
         </div>
         {ranked.length === 0 ? (
-          <p className="text-sm text-gray-500">No players yet.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">No players yet.</p>
         ) : (
-          <div className="rounded-xl border overflow-hidden">
+          <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
             <table className="w-full text-sm tabular-nums">
-              <thead className="bg-gray-50 text-gray-600 text-left">
+              <thead className="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-left">
                 <tr>
                   <th className="py-2 px-2">#</th>
                   <th className="py-2 px-1">Player</th>
@@ -252,12 +254,12 @@ export default function AdminDashboard({ adminKey, initialConfig, initialPlayers
               </thead>
               <tbody>
                 {ranked.map((p) => (
-                  <tr key={p.id} className="border-t">
-                    <td className="py-2 px-2 text-gray-500 align-top">{p.rank}</td>
+                  <tr key={p.id} className="border-t border-gray-200 dark:border-gray-700">
+                    <td className="py-2 px-2 text-gray-500 dark:text-gray-400 align-top">{p.rank}</td>
                     <td className="py-2 px-1 align-top">
                       <div className="font-medium leading-tight">{p.name}</div>
                       {p.scorerName && (
-                        <div className="text-[11px] text-gray-500 leading-tight">
+                        <div className="text-[11px] text-gray-500 dark:text-gray-400 leading-tight">
                           scored by {p.scorerName}
                         </div>
                       )}
@@ -265,15 +267,15 @@ export default function AdminDashboard({ adminKey, initialConfig, initialPlayers
                     <td className="py-2 px-1 text-center align-top">{p.handicap}</td>
                     <td className="py-2 px-1 text-center align-top">{p.played}/18</td>
                     <td className="py-2 px-2 text-right font-bold align-top">{p.total}</td>
-                    <td className="py-2 px-2 text-right text-xs text-gray-500 align-top">
+                    <td className="py-2 px-2 text-right text-xs text-gray-500 dark:text-gray-400 align-top">
                       {p.submittedAt ? (
-                        <span className="text-emerald-700">submitted</span>
+                        <span className="text-emerald-700 dark:text-emerald-400">submitted</span>
                       ) : (
                         timeAgo(p.updatedAt)
                       )}
                       <button
                         type="button"
-                        className="ml-2 text-red-600 underline"
+                        className="ml-2 text-red-600 dark:text-red-400 underline"
                         onClick={() => {
                           if (confirm(`Delete ${p.name}?`)) {
                             post({ action: "delete", playerId: p.id });
@@ -298,17 +300,17 @@ export default function AdminDashboard({ adminKey, initialConfig, initialPlayers
           <button
             type="button"
             onClick={() => copyText(predictionsText)}
-            className="text-xs text-emerald-700 underline"
+            className="text-xs text-emerald-700 dark:text-emerald-400 underline"
           >
             Copy as text
           </button>
         </div>
         {predictions.length === 0 ? (
-          <p className="text-sm text-gray-500">No predictions yet.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">No predictions yet.</p>
         ) : (
-          <div className="rounded-xl border overflow-hidden">
+          <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
             <table className="w-full text-sm tabular-nums">
-              <thead className="bg-gray-50 text-gray-600 text-left">
+              <thead className="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-left">
                 <tr>
                   <th className="py-2 px-2">Player</th>
                   <th className="py-2 px-2 text-right">Votes</th>
@@ -317,10 +319,10 @@ export default function AdminDashboard({ adminKey, initialConfig, initialPlayers
               </thead>
               <tbody>
                 {predictions.map((p) => (
-                  <tr key={p.name} className="border-t">
+                  <tr key={p.name} className="border-t border-gray-200 dark:border-gray-700">
                     <td className="py-2 px-2 font-medium">{p.name}</td>
                     <td className="py-2 px-2 text-right">{p.count}</td>
-                    <td className="py-2 px-2 text-right text-gray-500">
+                    <td className="py-2 px-2 text-right text-gray-500 dark:text-gray-400">
                       {totalPredictions ? Math.round((p.count / totalPredictions) * 100) : 0}%
                     </td>
                   </tr>
@@ -331,7 +333,7 @@ export default function AdminDashboard({ adminKey, initialConfig, initialPlayers
         )}
       </section>
 
-      <p className="text-xs text-gray-400">
+      <p className="text-xs text-gray-400 dark:text-gray-500">
         Auto-refreshes every 10 seconds. Share <code>/</code> with your players (not this page).
       </p>
     </main>

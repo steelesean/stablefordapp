@@ -68,7 +68,7 @@ export default function ReviewPage() {
   if (loading) return <main className="flex-1 flex items-center justify-center">Loading…</main>;
   if (error || !player) {
     return (
-      <main className="flex-1 flex items-center justify-center px-6 text-center text-red-600">
+      <main className="flex-1 flex items-center justify-center px-6 text-center text-red-600 dark:text-red-400">
         {error ?? "Something went wrong"}
       </main>
     );
@@ -83,17 +83,17 @@ export default function ReviewPage() {
   return (
     <main className="flex-1 px-4 py-6 max-w-md mx-auto w-full">
       <h1 className="text-2xl font-bold">Review {player.name}&apos;s card</h1>
-      <p className="text-sm text-gray-500 mb-1">
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
         HCP {player.handicap} · {tee.label}
         {player.scorerName && ` · scored by ${player.scorerName}`}
       </p>
-      <p className="text-sm text-gray-600 mb-4">
+      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
         Go through each hole with {player.name} before you submit. Once submitted, only the organizer can change it.
       </p>
 
-      <div className="rounded-xl border overflow-hidden mb-6">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
         <table className="w-full text-sm tabular-nums">
-          <thead className="bg-gray-50 text-gray-600">
+          <thead className="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
             <tr>
               <th className="py-2 px-2 text-left">#</th>
               <th className="py-2 px-1 text-left font-normal">Hole</th>
@@ -105,12 +105,12 @@ export default function ReviewPage() {
           </thead>
           <tbody>
             {rows.map((r, i) => (
-              <tr key={r.hole} className={i === 8 ? "border-b-2 border-gray-300" : "border-b"}>
-                <td className="py-2 px-2 text-gray-500">{r.hole}</td>
+              <tr key={r.hole} className={i === 8 ? "border-b-2 border-gray-300 dark:border-gray-600" : "border-b border-gray-200 dark:border-gray-700"}>
+                <td className="py-2 px-2 text-gray-500 dark:text-gray-400">{r.hole}</td>
                 <td className="py-2 px-1 truncate max-w-[100px]">{COURSE.holeNames[i]}</td>
                 <td className="py-2 px-1 text-center">{r.par}</td>
                 <td className="py-2 px-1 text-center">
-                  {r.gross ?? <span className="text-red-500">—</span>}
+                  {r.gross ?? <span className="text-red-500 dark:text-red-400">—</span>}
                 </td>
                 <td className="py-2 px-2 text-right font-semibold">{r.points}</td>
                 <td className="py-2 pr-2 text-right">
@@ -121,14 +121,14 @@ export default function ReviewPage() {
                         sessionStorage.setItem("stableford:jumpTo", String(i));
                       }
                     }}
-                    className="text-xs text-emerald-700 underline"
+                    className="text-xs text-emerald-700 dark:text-emerald-400 underline"
                   >
                     edit
                   </Link>
                 </td>
               </tr>
             ))}
-            <tr className="bg-gray-50 font-bold">
+            <tr className="bg-gray-50 dark:bg-gray-800 font-bold">
               <td className="py-3 px-2" colSpan={4}>
                 Total ({played}/18)
               </td>
@@ -140,18 +140,18 @@ export default function ReviewPage() {
       </div>
 
       {!allPlayed && (
-        <p className="text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mb-4">
+        <p className="text-sm text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950 rounded-lg px-3 py-2 mb-4">
           {18 - played} hole{18 - played === 1 ? "" : "s"} with no score.
           Missing holes count as zero points. Go back and fill them in if needed.
         </p>
       )}
 
-      {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
+      {error && <p className="text-sm text-red-600 dark:text-red-400 mb-3">{error}</p>}
 
       <div className="flex gap-3">
         <Link
           href="/play"
-          className="flex-1 py-4 rounded-xl bg-gray-100 text-center font-semibold"
+          className="flex-1 py-4 rounded-xl bg-gray-100 dark:bg-gray-800 text-center font-semibold"
         >
           Back to hole
         </Link>
@@ -166,9 +166,9 @@ export default function ReviewPage() {
 
       {showConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center p-4 z-20">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full space-y-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-sm w-full space-y-4">
             <h2 className="text-lg font-bold">Submit {player.name}&apos;s card?</h2>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               You&apos;re about to submit <b>{total} points</b> as {player.name}&apos;s final score.
               Make sure they&apos;ve seen it. Once submitted, only the organizer can change it.
             </p>
@@ -176,7 +176,7 @@ export default function ReviewPage() {
               <button
                 type="button"
                 onClick={() => setShowConfirm(false)}
-                className="flex-1 py-3 rounded-xl bg-gray-100 font-semibold"
+                className="flex-1 py-3 rounded-xl bg-gray-100 dark:bg-gray-800 font-semibold"
               >
                 Cancel
               </button>
