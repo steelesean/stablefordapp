@@ -17,6 +17,7 @@ export default function LandingPage() {
     <main className="flex-1 flex flex-col items-center justify-center px-6 py-10 text-center">
       <div className="max-w-sm w-full space-y-8">
         <header className="space-y-2">
+          <div className="text-5xl">🏆</div>
           <h1 className="text-4xl font-extrabold" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>The Colin Cup</h1>
           <p className="text-sm uppercase tracking-wider text-emerald-700 font-semibold">
             Deer Park Golf &amp; Country Club
