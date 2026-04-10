@@ -241,7 +241,7 @@ export default function PlayPage() {
         </div>
 
         <div className="flex gap-3 flex-wrap justify-center">
-          {[par - 2, par - 1, par, par + 1, par + 2].filter((v) => v > 0).map((v) => (
+          {[par - 1, par, par + 1, par + 2].filter((v) => v > 0).map((v) => (
             <button
               key={v}
               type="button"
