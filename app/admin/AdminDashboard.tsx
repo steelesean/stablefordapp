@@ -196,6 +196,21 @@ export default function AdminDashboard({ adminKey, initialConfig, initialPlayers
           >
             Refresh
           </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => {
+              if (
+                confirm("Reset the entire round? This will DELETE all players and scores.") &&
+                confirm("Are you absolutely sure? This cannot be undone.")
+              ) {
+                post({ action: "reset" });
+              }
+            }}
+            className="text-xs px-3 py-1.5 rounded-lg border border-red-300 text-red-600 font-semibold"
+          >
+            Reset round
+          </button>
         </div>
       </header>
 

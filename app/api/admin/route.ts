@@ -6,6 +6,7 @@ import {
   deletePlayer,
   listPlayers,
   reopenRound,
+  resetRound,
   getRoundConfig,
 } from "@/lib/store";
 
@@ -48,6 +49,10 @@ export async function POST(req: Request) {
     }
     case "reopen": {
       const cfg = await reopenRound();
+      return NextResponse.json({ config: cfg });
+    }
+    case "reset": {
+      const cfg = await resetRound();
       return NextResponse.json({ config: cfg });
     }
     case "delete": {

@@ -60,6 +60,26 @@ interface MemStore {
   players: Map<string, Player>;
 }
 
+/**
+ * In production, Supabase MUST be configured — throw immediately so a
+ * misconfigured deploy surfaces as a clear 500 instead of silently
+ * losing data in memory.
+ *
+ * In local dev (`NODE_ENV !== 'production'`), fall back to an in-memory
+ * store so `npm run dev` works without env vars.
+ */
+function requireSupabase(): void {
+  if (!supabaseConfigured() && process.env.NODE_ENV === "production") {
+    throw new Error(
+      "Supabase is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in Vercel env vars and redeploy.",
+    );
+  }
+}
+
+function useMemFallback(): boolean {
+  return !supabaseConfigured() && process.env.NODE_ENV !== "production";
+}
+
 const g = globalThis as unknown as { __stablefordMem?: MemStore };
 function mem(): MemStore {
   if (!g.__stablefordMem) {
@@ -79,7 +99,8 @@ function mem(): MemStore {
 /* ------------------------------------------------------------------ */
 
 export async function getRoundConfig(): Promise<RoundConfig> {
-  if (!supabaseConfigured()) return mem().config;
+  requireSupabase();
+  if (useMemFallback()) return mem().config;
 
   const supabase = getSupabase();
   const { data, error } = await supabase
@@ -101,7 +122,8 @@ export async function getRoundConfig(): Promise<RoundConfig> {
 }
 
 export async function closeRound(): Promise<RoundConfig> {
-  if (!supabaseConfigured()) {
+  requireSupabase();
+  if (useMemFallback()) {
     const m = mem();
     m.config = { ...m.config, status: "closed", closedAt: Date.now() };
     return m.config;
@@ -118,7 +140,8 @@ export async function closeRound(): Promise<RoundConfig> {
 }
 
 export async function reopenRound(): Promise<RoundConfig> {
-  if (!supabaseConfigured()) {
+  requireSupabase();
+  if (useMemFallback()) {
     const m = mem();
     m.config = { ...m.config, status: "open", closedAt: undefined };
     return m.config;
@@ -146,7 +169,8 @@ export async function createPlayer(params: {
   teeId: TeeId;
   prediction: string;
 }): Promise<Player> {
-  if (!supabaseConfigured()) {
+  requireSupabase();
+  if (useMemFallback()) {
     const now = Date.now();
     const player: Player = {
       id: params.id,
@@ -182,7 +206,8 @@ export async function createPlayer(params: {
 }
 
 export async function getPlayer(id: string): Promise<Player | null> {
-  if (!supabaseConfigured()) return mem().players.get(id) ?? null;
+  requireSupabase();
+  if (useMemFallback()) return mem().players.get(id) ?? null;
 
   const supabase = getSupabase();
   const { data, error } = await supabase
@@ -198,7 +223,8 @@ export async function updatePlayerScores(
   id: string,
   scores: (number | null)[],
 ): Promise<Player | null> {
-  if (!supabaseConfigured()) {
+  requireSupabase();
+  if (useMemFallback()) {
     const current = mem().players.get(id);
     if (!current) return null;
     if (current.submittedAt) return current;
@@ -222,7 +248,8 @@ export async function updatePlayerScores(
 }
 
 export async function submitPlayer(id: string): Promise<Player | null> {
-  if (!supabaseConfigured()) {
+  requireSupabase();
+  if (useMemFallback()) {
     const current = mem().players.get(id);
     if (!current) return null;
     if (current.submittedAt) return current;
@@ -254,7 +281,8 @@ export async function adminUpdatePlayer(
   id: string,
   patch: Partial<Omit<Player, "id" | "createdAt">>,
 ): Promise<Player | null> {
-  if (!supabaseConfigured()) {
+  requireSupabase();
+  if (useMemFallback()) {
     const current = mem().players.get(id);
     if (!current) return null;
     const updated: Player = { ...current, ...patch, updatedAt: Date.now() };
@@ -285,7 +313,8 @@ export async function adminUpdatePlayer(
 }
 
 export async function deletePlayer(id: string): Promise<void> {
-  if (!supabaseConfigured()) {
+  requireSupabase();
+  if (useMemFallback()) {
     mem().players.delete(id);
     return;
   }
@@ -294,8 +323,33 @@ export async function deletePlayer(id: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function resetRound(): Promise<RoundConfig> {
+  requireSupabase();
+  if (useMemFallback()) {
+    const m = mem();
+    m.players.clear();
+    m.config = { status: "open", createdAt: Date.now() };
+    return m.config;
+  }
+
+  const supabase = getSupabase();
+  // Delete all players
+  const { error: delErr } = await supabase.from("players").delete().neq("id", "");
+  if (delErr) throw delErr;
+  // Reset round config to open
+  const { data, error } = await supabase
+    .from("round_config")
+    .update({ status: "open", closed_at: null })
+    .eq("id", ROUND_ID)
+    .select()
+    .single<DbRoundConfigRow>();
+  if (error) throw error;
+  return rowToConfig(data);
+}
+
 export async function listPlayers(): Promise<Player[]> {
-  if (!supabaseConfigured()) return Array.from(mem().players.values());
+  requireSupabase();
+  if (useMemFallback()) return Array.from(mem().players.values());
 
   const supabase = getSupabase();
   const { data, error } = await supabase
