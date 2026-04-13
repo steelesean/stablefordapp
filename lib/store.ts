@@ -518,6 +518,14 @@ export async function resetCompetition(id: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function deleteCompetition(id: string): Promise<void> {
+  requireSupabase();
+  const supabase = getSupabase();
+  // Players are cascade-deleted via FK
+  const { error } = await supabase.from("competitions").delete().eq("id", id);
+  if (error) throw error;
+}
+
 export async function listPlayersForCompetition(competitionId: string): Promise<Player[]> {
   requireSupabase();
   const supabase = getSupabase();

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getUser } from "@/lib/supabase-auth";
 import {
   closeCompetition,
+  deleteCompetition,
   deletePlayer,
   getCompetition,
   adminUpdatePlayer,
@@ -53,10 +54,14 @@ export async function POST(
       await resetCompetition(id);
       return NextResponse.json({ ok: true });
     }
-    case "delete": {
+    case "deletePlayer": {
       if (!playerId) return NextResponse.json({ error: "playerId required" }, { status: 400 });
       await deletePlayer(playerId);
       return NextResponse.json({ ok: true });
+    }
+    case "deleteCompetition": {
+      await deleteCompetition(id);
+      return NextResponse.json({ ok: true, deleted: true });
     }
     case "update": {
       if (!playerId || !patch) {

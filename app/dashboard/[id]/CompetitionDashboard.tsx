@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { countback, holesPlayed, totalPoints } from "@/lib/stableford";
 import type { Competition, CompetitionTee, Player } from "@/lib/types";
@@ -60,6 +62,7 @@ function timeAgo(ts: number): string {
 }
 
 export default function CompetitionDashboard({ competition, initialPlayers }: Props) {
+  const router = useRouter();
   const [comp, setComp] = useState(competition);
   const [players, setPlayers] = useState(initialPlayers);
   const [busy, setBusy] = useState(false);
@@ -149,8 +152,37 @@ export default function CompetitionDashboard({ competition, initialPlayers }: Pr
     }
   }
 
+  async function handleDeleteCompetition() {
+    if (
+      !confirm("Delete this competition? All players and scores will be permanently removed.") ||
+      !confirm("Are you absolutely sure? This cannot be undone.")
+    ) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/competitions/${comp.id}/admin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "deleteCompetition" }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        setError(d.error ?? "Failed to delete");
+        setBusy(false);
+        return;
+      }
+      router.push("/dashboard");
+    } catch {
+      setError("Network error");
+      setBusy(false);
+    }
+  }
+
   return (
     <main className="flex-1 px-4 py-6 max-w-3xl mx-auto w-full space-y-6">
+      <Link href="/dashboard" className="text-sm text-emerald-700 dark:text-emerald-400 hover:underline">
+        &larr; All competitions
+      </Link>
+
       <header className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold">{comp.name || "Competition"}</h1>
@@ -296,7 +328,7 @@ export default function CompetitionDashboard({ competition, initialPlayers }: Pr
                         className="ml-2 text-red-600 dark:text-red-400 underline"
                         onClick={() => {
                           if (confirm(`Delete ${p.name}?`)) {
-                            post({ action: "delete", playerId: p.id });
+                            post({ action: "deletePlayer", playerId: p.id });
                           }
                         }}
                       >
@@ -345,6 +377,22 @@ export default function CompetitionDashboard({ competition, initialPlayers }: Pr
       <p className="text-xs text-gray-400 dark:text-gray-500">
         Auto-refreshes every 10 seconds.
       </p>
+
+      <hr className="border-gray-200 dark:border-gray-700" />
+
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          Permanently delete this competition and all its data.
+        </p>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={handleDeleteCompetition}
+          className="text-xs px-3 py-1.5 rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 font-semibold"
+        >
+          Delete competition
+        </button>
+      </div>
     </main>
   );
 }
