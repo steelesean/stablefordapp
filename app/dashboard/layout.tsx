@@ -18,18 +18,7 @@ export default async function DashboardLayout({
           <Link href="/dashboard" className="font-bold text-lg">
             Stableford
           </Link>
-          <div className="flex items-center gap-3 text-sm">
-            <span className="text-gray-500 dark:text-gray-400 hidden sm:inline">
-              {user.email}
-            </span>
-            <Link
-              href="/dashboard/new"
-              className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold text-xs"
-            >
-              New competition
-            </Link>
-            <LogoutButton />
-          </div>
+          <LogoutButton />
         </div>
       </nav>
       {children}

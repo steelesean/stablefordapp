@@ -21,9 +21,12 @@ export default async function DashboardPage() {
           <p className="text-gray-500 dark:text-gray-400">
             You haven&apos;t created any competitions yet.
           </p>
-          <p className="text-sm text-gray-400 dark:text-gray-500">
-            Hit &quot;New competition&quot; above to get started.
-          </p>
+          <Link
+            href="/dashboard/new"
+            className="inline-block px-6 py-3 rounded-xl bg-emerald-600 text-white font-semibold"
+          >
+            New competition
+          </Link>
         </div>
       ) : (
         <div className="space-y-3">
