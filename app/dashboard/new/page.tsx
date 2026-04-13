@@ -4,33 +4,23 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { COURSE } from "@/lib/course";
 
-type TeeInput = {
-  id: string;
-  label: string;
-  par: string[];       // string inputs for each hole
-  strokeIndex: string[];
-};
+interface HoleRow {
+  name: string;
+  par: string;
+  si: string;
+}
 
-const EMPTY_TEE: TeeInput = {
-  id: "",
-  label: "",
-  par: new Array(18).fill(""),
-  strokeIndex: new Array(18).fill(""),
-};
+function emptyHoles(): HoleRow[] {
+  return Array.from({ length: 18 }, () => ({ name: "", par: "", si: "" }));
+}
 
-function deerParkDefaults() {
-  const tees: TeeInput[] = Object.values(COURSE.tees).map((t) => ({
-    id: t.id,
-    label: t.label,
-    par: t.par.map(String),
-    strokeIndex: t.strokeIndex.map(String),
+function deerParkHoles(): HoleRow[] {
+  const tee = COURSE.tees.white; // default tee for template
+  return Array.from({ length: 18 }, (_, i) => ({
+    name: COURSE.holeNames[i],
+    par: String(tee.par[i]),
+    si: String(tee.strokeIndex[i]),
   }));
-  return {
-    name: "",
-    courseName: COURSE.name,
-    holeNames: [...COURSE.holeNames],
-    tees,
-  };
 }
 
 export default function NewCompetitionPage() {
@@ -39,98 +29,68 @@ export default function NewCompetitionPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Form state
+  // Step 1
   const [name, setName] = useState("");
   const [courseName, setCourseName] = useState("");
-  const [holeNames, setHoleNames] = useState<string[]>(new Array(18).fill(""));
-  const [tees, setTees] = useState<TeeInput[]>([{ ...EMPTY_TEE, id: "white", label: "White" }]);
+  const [teeLabel, setTeeLabel] = useState("");
+
+  // Step 2
+  const [holes, setHoles] = useState<HoleRow[]>(emptyHoles());
 
   function loadDefaults() {
-    const d = deerParkDefaults();
-    setCourseName(d.courseName);
-    setHoleNames(d.holeNames);
-    setTees(d.tees);
+    setCourseName(COURSE.name);
+    setTeeLabel("White (Men's Medal)");
+    setHoles(deerParkHoles());
   }
 
-  function updateTee(idx: number, field: keyof TeeInput, value: string | string[]) {
-    setTees((prev) => {
+  function updateHole(idx: number, field: keyof HoleRow, value: string) {
+    setHoles((prev) => {
       const next = [...prev];
       next[idx] = { ...next[idx], [field]: value };
       return next;
     });
   }
 
-  function updateTeeHoleValue(
-    teeIdx: number,
-    field: "par" | "strokeIndex",
-    holeIdx: number,
-    value: string,
-  ) {
-    setTees((prev) => {
-      const next = [...prev];
-      const arr = [...next[teeIdx][field]];
-      arr[holeIdx] = value;
-      next[teeIdx] = { ...next[teeIdx], [field]: arr };
-      return next;
-    });
-  }
-
-  function addTee() {
-    setTees((prev) => [...prev, { ...EMPTY_TEE, id: `tee-${prev.length + 1}` }]);
-  }
-
-  function removeTee(idx: number) {
-    setTees((prev) => prev.filter((_, i) => i !== idx));
-  }
-
-  function validateTees(): string | null {
-    for (const tee of tees) {
-      if (!tee.label.trim()) return "Each tee needs a label.";
-      const pars = tee.par.map(Number);
-      const sis = tee.strokeIndex.map(Number);
-      if (pars.some((p) => !Number.isFinite(p) || p < 1 || p > 7)) {
-        return `${tee.label}: all pars must be between 1 and 7.`;
-      }
-      if (sis.some((s) => !Number.isFinite(s) || s < 1 || s > 18)) {
-        return `${tee.label}: stroke indexes must be 1–18.`;
-      }
-      const siSet = new Set(sis);
-      if (siSet.size !== 18) {
-        return `${tee.label}: each stroke index (1–18) must be used exactly once.`;
-      }
+  function validate(): string | null {
+    if (!courseName.trim()) return "Course name is required.";
+    if (!teeLabel.trim()) return "Tee name is required.";
+    const pars = holes.map((h) => Number(h.par));
+    const sis = holes.map((h) => Number(h.si));
+    if (pars.some((p) => !Number.isFinite(p) || p < 1 || p > 7)) {
+      return "All pars must be between 1 and 7.";
+    }
+    if (sis.some((s) => !Number.isFinite(s) || s < 1 || s > 18)) {
+      return "Stroke indexes must be 1–18.";
+    }
+    const siSet = new Set(sis);
+    if (siSet.size !== 18) {
+      return "Each stroke index (1–18) must be used exactly once.";
     }
     return null;
   }
 
   async function handleCreate() {
     setError(null);
-    const teeErr = validateTees();
-    if (teeErr) {
-      setError(teeErr);
-      return;
-    }
-    if (!courseName.trim()) {
-      setError("Course name is required.");
-      return;
-    }
-    if (tees.length === 0) {
-      setError("At least one tee is required.");
-      return;
-    }
+    const err = validate();
+    if (err) { setError(err); return; }
 
     setSubmitting(true);
     try {
+      const pars = holes.map((h) => Number(h.par));
       const body = {
         name: name.trim(),
         courseName: courseName.trim(),
         holeCount: 18,
-        holeNames: holeNames.map((n) => n.trim()),
-        tees: tees.map((t) => ({
-          id: t.id.trim().toLowerCase().replace(/\s+/g, "-") || t.label.trim().toLowerCase().replace(/\s+/g, "-"),
-          label: t.label.trim(),
-          par: t.par.map(Number),
-          strokeIndex: t.strokeIndex.map(Number),
-        })),
+        holeNames: holes.map((h) => h.name.trim()),
+        tees: [
+          {
+            id: teeLabel.trim().toLowerCase().replace(/\s+/g, "-"),
+            label: teeLabel.trim(),
+            par: pars,
+            strokeIndex: holes.map((h) => Number(h.si)),
+            totalPar: pars.reduce((a, v) => a + v, 0),
+          },
+        ],
       };
 
       const res = await fetch("/api/competitions", {
@@ -151,16 +111,18 @@ export default function NewCompetitionPage() {
     }
   }
 
+  const totalPar = holes.reduce((a, h) => a + (Number(h.par) || 0), 0);
+
   const inputCls =
     "w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-3 text-base text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500";
-  const smallInputCls =
-    "w-14 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1.5 text-center text-sm text-gray-900 dark:text-gray-100 tabular-nums";
+  const cellInputCls =
+    "w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-2 text-center text-sm text-gray-900 dark:text-gray-100 tabular-nums";
 
   return (
     <main className="flex-1 px-4 py-6 max-w-2xl mx-auto w-full">
       {/* Step indicator */}
       <div className="flex items-center gap-2 mb-6">
-        {[1, 2, 3, 4].map((s) => (
+        {[1, 2, 3].map((s) => (
           <div
             key={s}
             className={`h-1.5 flex-1 rounded-full ${
@@ -175,7 +137,7 @@ export default function NewCompetitionPage() {
           <div>
             <h1 className="text-2xl font-bold">Create a competition</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Give it a name and tell us the course.
+              Name it, tell us the course, and which tee players will use.
             </p>
           </div>
 
@@ -209,6 +171,21 @@ export default function NewCompetitionPage() {
             />
           </div>
 
+          <div>
+            <label className="block text-sm font-medium mb-1" htmlFor="teeLabel">
+              Tee
+            </label>
+            <input
+              id="teeLabel"
+              type="text"
+              className={inputCls}
+              placeholder="e.g. White (Men's Medal)"
+              value={teeLabel}
+              onChange={(e) => setTeeLabel(e.target.value)}
+              required
+            />
+          </div>
+
           <button
             type="button"
             onClick={loadDefaults}
@@ -219,7 +196,7 @@ export default function NewCompetitionPage() {
 
           <button
             type="button"
-            disabled={!courseName.trim()}
+            disabled={!courseName.trim() || !teeLabel.trim()}
             onClick={() => setStep(2)}
             className="w-full py-4 rounded-xl bg-emerald-600 text-white text-lg font-semibold shadow active:scale-[.98] disabled:opacity-50"
           >
@@ -231,48 +208,105 @@ export default function NewCompetitionPage() {
       {step === 2 && (
         <div className="space-y-5">
           <div>
-            <h1 className="text-2xl font-bold">Hole names</h1>
+            <h1 className="text-2xl font-bold">Course setup</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Name each hole. Leave blank if the course doesn&apos;t name them.
+              Enter the par and stroke index for each hole. Names are optional.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-2">
-            {holeNames.map((hn, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <span className="text-sm text-gray-500 dark:text-gray-400 w-8 text-right tabular-nums">
-                  {i + 1}
-                </span>
-                <input
-                  type="text"
-                  className={inputCls}
-                  placeholder={`Hole ${i + 1}`}
-                  value={hn}
-                  onChange={(e) => {
-                    const next = [...holeNames];
-                    next[i] = e.target.value;
-                    setHoleNames(next);
-                  }}
-                  maxLength={40}
-                />
-              </div>
-            ))}
+          <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+                <tr>
+                  <th className="py-2 px-2 text-left w-10">#</th>
+                  <th className="py-2 px-1 text-left">Name</th>
+                  <th className="py-2 px-1 text-center w-20">Par</th>
+                  <th className="py-2 px-2 text-center w-20">SI</th>
+                </tr>
+              </thead>
+              <tbody>
+                {holes.map((h, i) => (
+                  <tr
+                    key={i}
+                    className={
+                      i === 8
+                        ? "border-b-2 border-gray-300 dark:border-gray-600"
+                        : "border-b border-gray-100 dark:border-gray-800"
+                    }
+                  >
+                    <td className="py-1.5 px-2 text-gray-500 dark:text-gray-400 tabular-nums">
+                      {i + 1}
+                    </td>
+                    <td className="py-1.5 px-1">
+                      <input
+                        type="text"
+                        className="w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-2 py-1.5 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-300 dark:placeholder:text-gray-600"
+                        placeholder={`Hole ${i + 1}`}
+                        value={h.name}
+                        onChange={(e) => updateHole(i, "name", e.target.value)}
+                        maxLength={40}
+                      />
+                    </td>
+                    <td className="py-1.5 px-1">
+                      <input
+                        type="number"
+                        min="1"
+                        max="7"
+                        className={cellInputCls}
+                        placeholder="4"
+                        value={h.par}
+                        onChange={(e) => updateHole(i, "par", e.target.value)}
+                      />
+                    </td>
+                    <td className="py-1.5 px-2">
+                      <input
+                        type="number"
+                        min="1"
+                        max="18"
+                        className={cellInputCls}
+                        placeholder={String(i + 1)}
+                        value={h.si}
+                        onChange={(e) => updateHole(i, "si", e.target.value)}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="bg-gray-50 dark:bg-gray-800 font-semibold">
+                  <td className="py-2 px-2" colSpan={2}>Total</td>
+                  <td className="py-2 px-1 text-center">{totalPar}</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
           </div>
+
+          {error && (
+            <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950 rounded-lg px-3 py-2">
+              {error}
+            </p>
+          )}
 
           <div className="flex gap-3">
             <button
               type="button"
-              onClick={() => setStep(1)}
+              onClick={() => { setError(null); setStep(1); }}
               className="flex-1 py-4 rounded-xl bg-gray-100 dark:bg-gray-800 font-semibold"
             >
               Back
             </button>
             <button
               type="button"
-              onClick={() => setStep(3)}
+              onClick={() => {
+                const err = validate();
+                if (err) { setError(err); return; }
+                setError(null);
+                setStep(3);
+              }}
               className="flex-[2] py-4 rounded-xl bg-emerald-600 text-white font-semibold active:scale-[.98]"
             >
-              Next
+              Review
             </button>
           </div>
         </div>
@@ -281,161 +315,13 @@ export default function NewCompetitionPage() {
       {step === 3 && (
         <div className="space-y-5">
           <div>
-            <h1 className="text-2xl font-bold">Tee configurations</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Set up each tee with par and stroke index for every hole.
-            </p>
-          </div>
-
-          {tees.map((tee, tIdx) => (
-            <div
-              key={tIdx}
-              className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-3"
-            >
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold">Tee {tIdx + 1}</h3>
-                {tees.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeTee(tIdx)}
-                    className="text-xs text-red-600 dark:text-red-400 underline"
-                  >
-                    Remove
-                  </button>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium mb-1">Tee ID</label>
-                  <input
-                    type="text"
-                    className={inputCls}
-                    placeholder="e.g. white"
-                    value={tee.id}
-                    onChange={(e) => updateTee(tIdx, "id", e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1">Label</label>
-                  <input
-                    type="text"
-                    className={inputCls}
-                    placeholder="e.g. White (Men's Medal)"
-                    value={tee.label}
-                    onChange={(e) => updateTee(tIdx, "label", e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="text-sm tabular-nums">
-                  <thead>
-                    <tr className="text-gray-500 dark:text-gray-400 text-xs">
-                      <th className="pr-2 text-left">Hole</th>
-                      {Array.from({ length: 18 }, (_, i) => (
-                        <th key={i} className="px-0.5 text-center w-14">
-                          {i + 1}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td className="pr-2 text-xs text-gray-500 dark:text-gray-400">Par</td>
-                      {tee.par.map((v, hIdx) => (
-                        <td key={hIdx} className="px-0.5">
-                          <input
-                            type="number"
-                            min="1"
-                            max="7"
-                            className={smallInputCls}
-                            value={v}
-                            onChange={(e) =>
-                              updateTeeHoleValue(tIdx, "par", hIdx, e.target.value)
-                            }
-                          />
-                        </td>
-                      ))}
-                    </tr>
-                    <tr>
-                      <td className="pr-2 text-xs text-gray-500 dark:text-gray-400">SI</td>
-                      {tee.strokeIndex.map((v, hIdx) => (
-                        <td key={hIdx} className="px-0.5">
-                          <input
-                            type="number"
-                            min="1"
-                            max="18"
-                            className={smallInputCls}
-                            value={v}
-                            onChange={(e) =>
-                              updateTeeHoleValue(tIdx, "strokeIndex", hIdx, e.target.value)
-                            }
-                          />
-                        </td>
-                      ))}
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <p className="text-xs text-gray-400 dark:text-gray-500">
-                Total par: {tee.par.reduce((a, v) => a + (Number(v) || 0), 0)}
-              </p>
-            </div>
-          ))}
-
-          <button
-            type="button"
-            onClick={addTee}
-            className="text-sm text-emerald-700 dark:text-emerald-400 underline"
-          >
-            + Add another tee
-          </button>
-
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={() => setStep(2)}
-              className="flex-1 py-4 rounded-xl bg-gray-100 dark:bg-gray-800 font-semibold"
-            >
-              Back
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                const err = validateTees();
-                if (err) {
-                  setError(err);
-                  return;
-                }
-                setError(null);
-                setStep(4);
-              }}
-              className="flex-[2] py-4 rounded-xl bg-emerald-600 text-white font-semibold active:scale-[.98]"
-            >
-              Review
-            </button>
-          </div>
-
-          {error && (
-            <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950 rounded-lg px-3 py-2">
-              {error}
-            </p>
-          )}
-        </div>
-      )}
-
-      {step === 4 && (
-        <div className="space-y-5">
-          <div>
             <h1 className="text-2xl font-bold">Review & create</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Check everything looks right before creating.
+              Check everything looks right.
             </p>
           </div>
 
-          <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-2">
+          <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-3">
             {name && (
               <div>
                 <span className="text-xs text-gray-500 dark:text-gray-400">Competition</span>
@@ -447,22 +333,23 @@ export default function NewCompetitionPage() {
               <p className="font-semibold">{courseName}</p>
             </div>
             <div>
-              <span className="text-xs text-gray-500 dark:text-gray-400">Holes</span>
-              <p className="text-sm">
-                {holeNames.filter((n) => n.trim()).length > 0
-                  ? holeNames
-                      .map((n, i) => n.trim() || `Hole ${i + 1}`)
-                      .join(", ")
-                  : "18 holes (unnamed)"}
-              </p>
+              <span className="text-xs text-gray-500 dark:text-gray-400">Tee</span>
+              <p className="text-sm">{teeLabel} — par {totalPar}</p>
             </div>
             <div>
-              <span className="text-xs text-gray-500 dark:text-gray-400">Tees</span>
-              {tees.map((t, i) => (
-                <p key={i} className="text-sm">
-                  {t.label} — par {t.par.reduce((a, v) => a + (Number(v) || 0), 0)}
-                </p>
-              ))}
+              <span className="text-xs text-gray-500 dark:text-gray-400">Holes</span>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-sm mt-1">
+                {holes.map((h, i) => (
+                  <div key={i} className="flex justify-between tabular-nums">
+                    <span className="text-gray-600 dark:text-gray-400">
+                      {i + 1}. {h.name || `Hole ${i + 1}`}
+                    </span>
+                    <span>
+                      Par {h.par}, SI {h.si}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -475,7 +362,7 @@ export default function NewCompetitionPage() {
           <div className="flex gap-3">
             <button
               type="button"
-              onClick={() => setStep(3)}
+              onClick={() => { setError(null); setStep(2); }}
               className="flex-1 py-4 rounded-xl bg-gray-100 dark:bg-gray-800 font-semibold"
             >
               Back
