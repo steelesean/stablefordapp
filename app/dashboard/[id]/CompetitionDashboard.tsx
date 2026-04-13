@@ -146,10 +146,34 @@ export default function CompetitionDashboard({ competition, initialPlayers }: Pr
     return lines.join("\n");
   }, [ranked, comp.courseName]);
 
-  function copyText(text: string) {
-    if (typeof navigator !== "undefined" && navigator.clipboard) {
-      navigator.clipboard.writeText(text).catch(() => {});
+  const [copied, setCopied] = useState<string | null>(null);
+
+  function copyText(text: string, label?: string) {
+    const key = label ?? text;
+    // Try modern clipboard API first, fall back to execCommand
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).then(
+        () => { setCopied(key); setTimeout(() => setCopied(null), 2000); },
+        () => fallbackCopy(text, key),
+      );
+    } else {
+      fallbackCopy(text, key);
     }
+  }
+
+  function fallbackCopy(text: string, key: string) {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand("copy");
+      setCopied(key);
+      setTimeout(() => setCopied(null), 2000);
+    } catch { /* ignore */ }
+    document.body.removeChild(ta);
   }
 
   async function handleDeleteCompetition() {
@@ -255,10 +279,10 @@ export default function CompetitionDashboard({ competition, initialPlayers }: Pr
           </code>
           <button
             type="button"
-            onClick={() => copyText(joinUrl)}
+            onClick={() => copyText(joinUrl, "link")}
             className="text-xs px-3 py-2 rounded-lg bg-emerald-600 text-white font-semibold shrink-0"
           >
-            Copy
+            {copied === "link" ? "Copied!" : "Copy"}
           </button>
         </div>
         <p className="text-xs text-gray-400 dark:text-gray-500">
@@ -281,10 +305,10 @@ export default function CompetitionDashboard({ competition, initialPlayers }: Pr
           </h2>
           <button
             type="button"
-            onClick={() => copyText(resultsText)}
+            onClick={() => copyText(resultsText, "results")}
             className="text-xs text-emerald-700 dark:text-emerald-400 underline"
           >
-            Copy as text
+            {copied === "results" ? "Copied!" : "Copy as text"}
           </button>
         </div>
         {ranked.length === 0 ? (
