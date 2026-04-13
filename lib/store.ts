@@ -1,6 +1,7 @@
 import { getSupabase, supabaseConfigured } from "./supabase";
-import type { Player, RoundConfig } from "./types";
+import type { Competition, CompetitionTee, Player, RoundConfig } from "./types";
 import type { TeeId } from "./course";
+import { generateJoinCode } from "./join-code";
 
 /* ------------------------------------------------------------------ */
 /* Types that match the Postgres schema exactly                        */
@@ -24,6 +25,21 @@ interface DbPlayerRow {
   created_at: string;
   updated_at: string;
   submitted_at: string | null;
+  competition_id: string | null;
+}
+
+interface DbCompetitionRow {
+  id: string;
+  organizer_id: string;
+  name: string;
+  join_code: string;
+  course_name: string;
+  hole_count: number;
+  hole_names: string[];
+  tees: CompetitionTee[];
+  status: "open" | "closed";
+  created_at: string;
+  closed_at: string | null;
 }
 
 const ROUND_ID = 1; // single-round app — one row in round_config
@@ -40,6 +56,23 @@ function rowToPlayer(row: DbPlayerRow): Player {
     createdAt: new Date(row.created_at).getTime(),
     updatedAt: new Date(row.updated_at).getTime(),
     submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : undefined,
+    competitionId: row.competition_id ?? undefined,
+  };
+}
+
+function rowToCompetition(row: DbCompetitionRow): Competition {
+  return {
+    id: row.id,
+    organizerId: row.organizer_id,
+    name: row.name,
+    joinCode: row.join_code,
+    courseName: row.course_name,
+    holeCount: row.hole_count,
+    holeNames: row.hole_names,
+    tees: row.tees,
+    status: row.status,
+    createdAt: new Date(row.created_at).getTime(),
+    closedAt: row.closed_at ? new Date(row.closed_at).getTime() : undefined,
   };
 }
 
@@ -358,4 +391,172 @@ export async function listPlayers(): Promise<Player[]> {
     .order("created_at", { ascending: true });
   if (error) throw error;
   return (data ?? []).map((row) => rowToPlayer(row as DbPlayerRow));
+}
+
+/* ------------------------------------------------------------------ */
+/* Competitions (multi-tenant)                                         */
+/* ------------------------------------------------------------------ */
+
+export async function createCompetition(params: {
+  organizerId: string;
+  name: string;
+  courseName: string;
+  holeCount: number;
+  holeNames: string[];
+  tees: CompetitionTee[];
+}): Promise<Competition> {
+  requireSupabase();
+  const supabase = getSupabase();
+
+  // Generate a unique join code (retry on collision — extremely unlikely)
+  let joinCode: string;
+  let attempts = 0;
+  do {
+    joinCode = generateJoinCode();
+    const { data: existing } = await supabase
+      .from("competitions")
+      .select("id")
+      .eq("join_code", joinCode)
+      .maybeSingle();
+    if (!existing) break;
+    attempts++;
+  } while (attempts < 5);
+
+  const { data, error } = await supabase
+    .from("competitions")
+    .insert({
+      organizer_id: params.organizerId,
+      name: params.name,
+      join_code: joinCode,
+      course_name: params.courseName,
+      hole_count: params.holeCount,
+      hole_names: params.holeNames,
+      tees: params.tees,
+    })
+    .select()
+    .single<DbCompetitionRow>();
+  if (error) throw error;
+  return rowToCompetition(data);
+}
+
+export async function getCompetition(id: string): Promise<Competition | null> {
+  requireSupabase();
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("competitions")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle<DbCompetitionRow>();
+  if (error) throw error;
+  return data ? rowToCompetition(data) : null;
+}
+
+export async function getCompetitionByCode(joinCode: string): Promise<Competition | null> {
+  requireSupabase();
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("competitions")
+    .select("*")
+    .eq("join_code", joinCode.toUpperCase())
+    .maybeSingle<DbCompetitionRow>();
+  if (error) throw error;
+  return data ? rowToCompetition(data) : null;
+}
+
+export async function listCompetitions(organizerId: string): Promise<Competition[]> {
+  requireSupabase();
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("competitions")
+    .select("*")
+    .eq("organizer_id", organizerId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((row) => rowToCompetition(row as DbCompetitionRow));
+}
+
+export async function closeCompetition(id: string): Promise<Competition> {
+  requireSupabase();
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("competitions")
+    .update({ status: "closed", closed_at: new Date().toISOString() })
+    .eq("id", id)
+    .select()
+    .single<DbCompetitionRow>();
+  if (error) throw error;
+  return rowToCompetition(data);
+}
+
+export async function reopenCompetition(id: string): Promise<Competition> {
+  requireSupabase();
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("competitions")
+    .update({ status: "open", closed_at: null })
+    .eq("id", id)
+    .select()
+    .single<DbCompetitionRow>();
+  if (error) throw error;
+  return rowToCompetition(data);
+}
+
+export async function resetCompetition(id: string): Promise<void> {
+  requireSupabase();
+  const supabase = getSupabase();
+  // Delete all players for this competition
+  const { error: delErr } = await supabase
+    .from("players")
+    .delete()
+    .eq("competition_id", id);
+  if (delErr) throw delErr;
+  // Reopen the competition
+  const { error } = await supabase
+    .from("competitions")
+    .update({ status: "open", closed_at: null })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function listPlayersForCompetition(competitionId: string): Promise<Player[]> {
+  requireSupabase();
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("players")
+    .select("*")
+    .eq("competition_id", competitionId)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map((row) => rowToPlayer(row as DbPlayerRow));
+}
+
+export async function createPlayerForCompetition(
+  competitionId: string,
+  params: {
+    id: string;
+    name: string;
+    scorerName: string;
+    handicap: number;
+    teeId: string;
+    prediction: string;
+  },
+): Promise<Player> {
+  requireSupabase();
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("players")
+    .insert({
+      id: params.id,
+      competition_id: competitionId,
+      name: params.name,
+      scorer_name: params.scorerName,
+      handicap: params.handicap,
+      tee_id: params.teeId,
+      prediction: params.prediction,
+      scores: new Array(18).fill(null),
+    })
+    .select()
+    .single<DbPlayerRow>();
+  if (error) throw error;
+  return rowToPlayer(data);
 }

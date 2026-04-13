@@ -47,3 +47,83 @@ alter table public.players add column if not exists scorer_name text not null de
 -- ------------------------------------------------------------------
 alter table public.round_config enable row level security;
 alter table public.players      enable row level security;
+
+
+-- ==================================================================
+-- MULTI-TENANT MIGRATION (Phase 0)
+-- Run this after the tables above exist. Safe to run multiple times.
+-- ==================================================================
+
+-- ------------------------------------------------------------------
+-- competitions: one row per competition/event created by an organizer
+-- ------------------------------------------------------------------
+create table if not exists public.competitions (
+  id            uuid primary key default gen_random_uuid(),
+  organizer_id  uuid not null references auth.users(id) on delete cascade,
+  name          text not null default '',
+  join_code     text not null unique,
+  course_name   text not null,
+  hole_count    smallint not null default 18,
+  hole_names    text[] not null default '{}',
+  tees          jsonb not null default '[]',
+  status        text not null default 'open' check (status in ('open', 'closed')),
+  created_at    timestamptz not null default now(),
+  closed_at     timestamptz
+);
+
+create index if not exists competitions_organizer_idx on public.competitions (organizer_id);
+create index if not exists competitions_join_code_idx on public.competitions (join_code);
+
+alter table public.competitions enable row level security;
+
+-- ------------------------------------------------------------------
+-- Add competition_id FK to players (nullable for backward compat)
+-- ------------------------------------------------------------------
+alter table public.players
+  add column if not exists competition_id uuid references public.competitions(id) on delete cascade;
+
+create index if not exists players_competition_idx on public.players (competition_id);
+
+-- ------------------------------------------------------------------
+-- RLS policies for competitions
+-- Organizers: full access to their own competitions
+-- Public (anon): can read competitions to resolve join codes
+-- ------------------------------------------------------------------
+create policy "Organizers can manage their competitions"
+  on public.competitions
+  for all
+  using (auth.uid() = organizer_id)
+  with check (auth.uid() = organizer_id);
+
+create policy "Anyone can read competitions by join code"
+  on public.competitions
+  for select
+  using (true);
+
+-- ------------------------------------------------------------------
+-- RLS policies for players (multi-tenant)
+-- Service role bypasses these, but they protect against anon key misuse.
+-- Organizers can read players in their competitions.
+-- ------------------------------------------------------------------
+create policy "Organizers can read their competition players"
+  on public.players
+  for select
+  using (
+    competition_id in (
+      select id from public.competitions where organizer_id = auth.uid()
+    )
+  );
+
+create policy "Organizers can manage their competition players"
+  on public.players
+  for all
+  using (
+    competition_id in (
+      select id from public.competitions where organizer_id = auth.uid()
+    )
+  )
+  with check (
+    competition_id in (
+      select id from public.competitions where organizer_id = auth.uid()
+    )
+  );

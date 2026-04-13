@@ -1,35 +1,55 @@
 /**
  * Client-only helpers for localStorage so we can resume rounds on reopen
  * and queue score writes when the network is flaky.
+ *
+ * Keys are scoped by join code when provided (multi-tenant mode).
+ * Legacy unscoped keys are supported for backward compatibility.
  */
 
-export const LS_KEY_PLAYER_ID = "stableford:playerId";
-export const LS_KEY_PENDING = "stableford:pendingScores";
+/* ------------------------------------------------------------------ */
+/* Key helpers                                                         */
+/* ------------------------------------------------------------------ */
 
-export function getPlayerId(): string | null {
+function playerIdKey(joinCode?: string): string {
+  return joinCode ? `stableford:${joinCode}:playerId` : "stableford:playerId";
+}
+
+function pendingKey(joinCode?: string): string {
+  return joinCode ? `stableford:${joinCode}:pendingScores` : "stableford:pendingScores";
+}
+
+/* ------------------------------------------------------------------ */
+/* Player ID                                                           */
+/* ------------------------------------------------------------------ */
+
+export function getPlayerId(joinCode?: string): string | null {
   if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(LS_KEY_PLAYER_ID);
+  return window.localStorage.getItem(playerIdKey(joinCode));
 }
 
-export function setPlayerId(id: string): void {
+export function setPlayerId(id: string, joinCode?: string): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(LS_KEY_PLAYER_ID, id);
+  window.localStorage.setItem(playerIdKey(joinCode), id);
 }
 
-export function clearPlayerId(): void {
+export function clearPlayerId(joinCode?: string): void {
   if (typeof window === "undefined") return;
-  window.localStorage.removeItem(LS_KEY_PLAYER_ID);
+  window.localStorage.removeItem(playerIdKey(joinCode));
 }
+
+/* ------------------------------------------------------------------ */
+/* Pending scores (offline fallback)                                   */
+/* ------------------------------------------------------------------ */
 
 /** Save the most recent scores snapshot locally as an offline fallback. */
-export function cachePendingScores(scores: (number | null)[]): void {
+export function cachePendingScores(scores: (number | null)[], joinCode?: string): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(LS_KEY_PENDING, JSON.stringify(scores));
+  window.localStorage.setItem(pendingKey(joinCode), JSON.stringify(scores));
 }
 
-export function readPendingScores(): (number | null)[] | null {
+export function readPendingScores(joinCode?: string): (number | null)[] | null {
   if (typeof window === "undefined") return null;
-  const raw = window.localStorage.getItem(LS_KEY_PENDING);
+  const raw = window.localStorage.getItem(pendingKey(joinCode));
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw);
@@ -40,7 +60,14 @@ export function readPendingScores(): (number | null)[] | null {
   }
 }
 
-export function clearPendingScores(): void {
+export function clearPendingScores(joinCode?: string): void {
   if (typeof window === "undefined") return;
-  window.localStorage.removeItem(LS_KEY_PENDING);
+  window.localStorage.removeItem(pendingKey(joinCode));
 }
+
+/* ------------------------------------------------------------------ */
+/* Legacy exports (deprecated — use with joinCode parameter instead)   */
+/* ------------------------------------------------------------------ */
+
+export const LS_KEY_PLAYER_ID = "stableford:playerId";
+export const LS_KEY_PENDING = "stableford:pendingScores";
