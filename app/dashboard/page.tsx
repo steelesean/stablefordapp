@@ -13,15 +13,7 @@ export default async function DashboardPage() {
 
   return (
     <main className="flex-1 px-4 py-6 max-w-3xl mx-auto w-full">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Your competitions</h1>
-        <Link
-          href="/dashboard/new"
-          className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-semibold text-sm"
-        >
-          Create new
-        </Link>
-      </div>
+      <h1 className="text-2xl font-bold mb-6">Your competitions</h1>
 
       {competitions.length === 0 ? (
         <div className="text-center py-16 space-y-4">
@@ -29,12 +21,9 @@ export default async function DashboardPage() {
           <p className="text-gray-500 dark:text-gray-400">
             You haven&apos;t created any competitions yet.
           </p>
-          <Link
-            href="/dashboard/new"
-            className="inline-block px-6 py-3 rounded-xl bg-emerald-600 text-white font-semibold"
-          >
-            Create your first competition
-          </Link>
+          <p className="text-sm text-gray-400 dark:text-gray-500">
+            Hit &quot;New competition&quot; above to get started.
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
