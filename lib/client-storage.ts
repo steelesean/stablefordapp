@@ -73,12 +73,21 @@ const ONBOARDING_KEY = "stableford:onboardingSeen";
 
 export function hasSeenOnboarding(): boolean {
   if (typeof window === "undefined") return true;
-  return window.localStorage.getItem(ONBOARDING_KEY) === "true";
+  try {
+    return (
+      window.localStorage.getItem(ONBOARDING_KEY) === "true" ||
+      window.sessionStorage.getItem(ONBOARDING_KEY) === "true"
+    );
+  } catch {
+    return false;
+  }
 }
 
 export function setOnboardingSeen(seen: boolean): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(ONBOARDING_KEY, seen ? "true" : "false");
+  const value = seen ? "true" : "false";
+  try { window.localStorage.setItem(ONBOARDING_KEY, value); } catch { /* storage full or blocked */ }
+  try { window.sessionStorage.setItem(ONBOARDING_KEY, value); } catch { /* fallback */ }
 }
 
 /* ------------------------------------------------------------------ */

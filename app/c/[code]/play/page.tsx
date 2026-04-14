@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   cachePendingScores,
   clearPendingScores,
+  clearPlayerId,
   getPlayerId,
   readPendingScores,
 } from "@/lib/client-storage";
@@ -114,7 +115,7 @@ export default function PlayPage() {
         <button
           className="underline"
           onClick={() => {
-            localStorage.clear();
+            clearPlayerId(comp.joinCode);
             router.replace(`/c/${comp.joinCode}`);
           }}
         >
