@@ -53,12 +53,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Redirect authenticated users away from login/signup
+  // Redirect authenticated users away from login/signup and root
   if (
     user &&
-    (request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/signup")
+    (request.nextUrl.pathname === "/" || request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/signup")
   ) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  // Redirect unauthenticated users from root to signup
+  if (!user && request.nextUrl.pathname === "/") {
+    return NextResponse.redirect(new URL("/signup", request.url));
   }
 
   return supabaseResponse;
