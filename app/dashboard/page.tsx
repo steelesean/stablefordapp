@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getUser } from "@/lib/supabase-auth";
 import { listCompetitions } from "@/lib/store";
 import { redirect } from "next/navigation";
+import DashboardClient from "./DashboardClient";
 
 export const dynamic = "force-dynamic";
 
@@ -63,6 +64,8 @@ export default async function DashboardPage() {
           ))}
         </div>
       )}
+
+      <DashboardClient />
     </main>
   );
 }

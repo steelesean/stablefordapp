@@ -8,6 +8,7 @@ import {
   adminUpdatePlayer,
   reopenCompetition,
   resetCompetition,
+  updateCompetitionLeaderboard,
 } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
@@ -35,10 +36,11 @@ export async function POST(
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { action, playerId, patch } = (body ?? {}) as {
+  const { action, playerId, patch, showLeaderboard } = (body ?? {}) as {
     action?: string;
     playerId?: string;
     patch?: Record<string, unknown>;
+    showLeaderboard?: boolean;
   };
 
   switch (action) {
@@ -58,6 +60,10 @@ export async function POST(
       if (!playerId) return NextResponse.json({ error: "playerId required" }, { status: 400 });
       await deletePlayer(playerId);
       return NextResponse.json({ ok: true });
+    }
+    case "updateSettings": {
+      const comp = await updateCompetitionLeaderboard(id, !!showLeaderboard);
+      return NextResponse.json({ competition: comp });
     }
     case "deleteCompetition": {
       await deleteCompetition(id);

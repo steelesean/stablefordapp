@@ -66,6 +66,22 @@ export function clearPendingScores(joinCode?: string): void {
 }
 
 /* ------------------------------------------------------------------ */
+/* Onboarding (organiser, not scoped by competition)                   */
+/* ------------------------------------------------------------------ */
+
+const ONBOARDING_KEY = "stableford:onboardingSeen";
+
+export function hasSeenOnboarding(): boolean {
+  if (typeof window === "undefined") return true;
+  return window.localStorage.getItem(ONBOARDING_KEY) === "true";
+}
+
+export function setOnboardingSeen(seen: boolean): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(ONBOARDING_KEY, seen ? "true" : "false");
+}
+
+/* ------------------------------------------------------------------ */
 /* Legacy exports (deprecated — use with joinCode parameter instead)   */
 /* ------------------------------------------------------------------ */
 

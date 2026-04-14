@@ -26,6 +26,7 @@ export async function GET(
       holeNames: competition.holeNames,
       tees: competition.tees,
       status: competition.status,
+      showLeaderboard: competition.showLeaderboard,
     },
   });
 }

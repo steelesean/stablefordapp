@@ -38,6 +38,7 @@ interface DbCompetitionRow {
   hole_names: string[];
   tees: CompetitionTee[];
   status: "open" | "closed";
+  show_leaderboard: boolean;
   created_at: string;
   closed_at: string | null;
 }
@@ -71,6 +72,7 @@ function rowToCompetition(row: DbCompetitionRow): Competition {
     holeNames: row.hole_names,
     tees: row.tees,
     status: row.status,
+    showLeaderboard: row.show_leaderboard ?? false,
     createdAt: new Date(row.created_at).getTime(),
     closedAt: row.closed_at ? new Date(row.closed_at).getTime() : undefined,
   };
@@ -494,6 +496,19 @@ export async function reopenCompetition(id: string): Promise<Competition> {
   const { data, error } = await supabase
     .from("competitions")
     .update({ status: "open", closed_at: null })
+    .eq("id", id)
+    .select()
+    .single<DbCompetitionRow>();
+  if (error) throw error;
+  return rowToCompetition(data);
+}
+
+export async function updateCompetitionLeaderboard(id: string, show: boolean): Promise<Competition> {
+  requireSupabase();
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("competitions")
+    .update({ show_leaderboard: show })
     .eq("id", id)
     .select()
     .single<DbCompetitionRow>();

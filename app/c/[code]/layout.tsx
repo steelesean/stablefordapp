@@ -14,6 +14,7 @@ export interface CompetitionContext {
   holeNames: string[];
   tees: CompetitionTee[];
   status: string;
+  showLeaderboard: boolean;
 }
 
 const CompCtx = createContext<CompetitionContext | null>(null);

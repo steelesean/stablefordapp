@@ -13,15 +13,12 @@ import {
   pointsForHole,
   totalPoints,
 } from "@/lib/stableford";
-import type { CompetitionTee } from "@/lib/types";
 import type { Player } from "@/lib/types";
+import { findTee } from "@/lib/ranking";
 import { useCompetition } from "../layout";
+import Leaderboard from "./Leaderboard";
 
 type SyncStatus = "idle" | "saving" | "saved" | "offline";
-
-function findTee(tees: CompetitionTee[], teeId: string): CompetitionTee | null {
-  return tees.find((t) => t.id === teeId) ?? null;
-}
 
 export default function PlayPage() {
   const router = useRouter();
@@ -261,6 +258,11 @@ export default function PlayPage() {
           ))}
         </div>
       </div>
+
+      {/* Leaderboard */}
+      {comp.showLeaderboard && (
+        <Leaderboard joinCode={comp.joinCode} currentPlayerId={player?.id ?? null} />
+      )}
 
       {/* Footer nav */}
       <div className="sticky bottom-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 px-4 py-3 flex gap-3">

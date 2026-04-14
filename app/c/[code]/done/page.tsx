@@ -4,12 +4,9 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getPlayerId } from "@/lib/client-storage";
 import { totalPoints } from "@/lib/stableford";
-import type { CompetitionTee, Player } from "@/lib/types";
+import type { Player } from "@/lib/types";
+import { findTee } from "@/lib/ranking";
 import { useCompetition } from "../layout";
-
-function findTee(tees: CompetitionTee[], teeId: string): CompetitionTee | null {
-  return tees.find((t) => t.id === teeId) ?? null;
-}
 
 export default function DonePage() {
   const router = useRouter();

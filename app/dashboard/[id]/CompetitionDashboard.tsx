@@ -3,53 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { countback, holesPlayed, totalPoints } from "@/lib/stableford";
-import type { Competition, CompetitionTee, Player } from "@/lib/types";
+import { holesPlayed } from "@/lib/stableford";
+import { rankPlayers } from "@/lib/ranking";
+import type { Competition, Player } from "@/lib/types";
 
 interface Props {
   competition: Competition;
   initialPlayers: Player[];
-}
-
-interface Ranked extends Player {
-  total: number;
-  played: number;
-  rank: number;
-  sortKey: [number, number, number, number, number];
-}
-
-function findTee(tees: CompetitionTee[], teeId: string): CompetitionTee | null {
-  return tees.find((t) => t.id === teeId) ?? null;
-}
-
-function rankPlayers(players: Player[], tees: CompetitionTee[]): Ranked[] {
-  const enriched = players.map((p) => {
-    const tee = findTee(tees, p.teeId);
-    const par = tee?.par ?? [];
-    const si = tee?.strokeIndex ?? [];
-    const total = totalPoints(p.scores, par, si, p.handicap);
-    const played = holesPlayed(p.scores);
-    const sortKey = countback(p.scores, par, si, p.handicap);
-    return { ...p, total, played, sortKey, rank: 0 };
-  });
-  enriched.sort((a, b) => {
-    for (let i = 0; i < a.sortKey.length; i++) {
-      if (b.sortKey[i] !== a.sortKey[i]) return b.sortKey[i] - a.sortKey[i];
-    }
-    return a.name.localeCompare(b.name);
-  });
-  let prevKey: string | null = null;
-  let prevRank = 0;
-  enriched.forEach((p, i) => {
-    const k = p.sortKey.join(",");
-    if (k === prevKey) p.rank = prevRank;
-    else {
-      p.rank = i + 1;
-      prevRank = p.rank;
-      prevKey = k;
-    }
-  });
-  return enriched;
 }
 
 function timeAgo(ts: number): string {
@@ -288,6 +248,17 @@ export default function CompetitionDashboard({ competition, initialPlayers }: Pr
         <p className="text-xs text-gray-400 dark:text-gray-500">
           Join code: <strong>{comp.joinCode}</strong>
         </p>
+        <label className="flex items-center gap-2 text-sm pt-1 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={comp.showLeaderboard}
+            onChange={() =>
+              post({ action: "updateSettings", showLeaderboard: !comp.showLeaderboard })
+            }
+            className="rounded border-gray-300 dark:border-gray-600"
+          />
+          Show live leaderboard to players
+        </label>
       </div>
 
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}

@@ -85,6 +85,12 @@ alter table public.players
 create index if not exists players_competition_idx on public.players (competition_id);
 
 -- ------------------------------------------------------------------
+-- Leaderboard toggle (run on existing deployments)
+-- ------------------------------------------------------------------
+alter table public.competitions
+  add column if not exists show_leaderboard boolean not null default false;
+
+-- ------------------------------------------------------------------
 -- RLS policies for competitions
 -- Organizers: full access to their own competitions
 -- Public (anon): can read competitions to resolve join codes

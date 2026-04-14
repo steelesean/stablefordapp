@@ -54,6 +54,7 @@ export interface Competition {
   holeNames: string[];
   tees: CompetitionTee[];
   status: RoundStatus;
+  showLeaderboard: boolean;
   createdAt: number;
   closedAt?: number;
 }
