@@ -133,3 +133,44 @@ create policy "Organizers can manage their competition players"
       select id from public.competitions where organizer_id = auth.uid()
     )
   );
+
+-- ==================================================================
+-- GolfAPI.uk COURSE CACHE
+-- Course data rarely changes; we cache it so searches are instant and
+-- we stay well under the free tier's 200 req/month limit.
+-- ==================================================================
+
+create table if not exists public.cached_courses (
+  id          text primary key,              -- GolfAPI.uk club id
+  name        text not null,
+  county      text,
+  lat         double precision,
+  lng         double precision,
+  tees        jsonb not null default '[]',   -- CompetitionTee[]-compatible shape
+  hole_count  smallint not null default 18,
+  fetched_at  timestamptz not null default now()
+);
+
+-- Full-text index for name search
+create index if not exists cached_courses_name_fts_idx
+  on public.cached_courses
+  using gin (to_tsvector('english', name));
+
+-- Trigram index for fuzzy / prefix search (enables ILIKE '%term%' speedups)
+create extension if not exists pg_trgm;
+create index if not exists cached_courses_name_trgm_idx
+  on public.cached_courses
+  using gin (name gin_trgm_ops);
+
+create index if not exists cached_courses_fetched_at_idx
+  on public.cached_courses (fetched_at);
+
+alter table public.cached_courses enable row level security;
+
+-- Any authenticated organiser can read the cache (it's all public course info)
+create policy "Authenticated users can read course cache"
+  on public.cached_courses
+  for select
+  using (auth.role() = 'authenticated');
+
+-- Writes only via service role (no policy = denied for non-service calls)

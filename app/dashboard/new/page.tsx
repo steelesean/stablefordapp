@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { COURSE } from "@/lib/course";
+import CourseSearch from "./CourseSearch";
+import type { NormalisedCourse, NormalisedTee } from "@/lib/golf-api";
 
 interface HoleRow {
   name: string;
@@ -23,9 +25,20 @@ function deerParkHoles(): HoleRow[] {
   }));
 }
 
+function holesFromTee(tee: NormalisedTee): HoleRow[] {
+  return Array.from({ length: tee.par.length }, (_, i) => ({
+    name: "",
+    par: String(tee.par[i] ?? ""),
+    si: String(tee.strokeIndex[i] ?? ""),
+  }));
+}
+
+type Mode = "search" | "manual";
+
 export default function NewCompetitionPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
+  const [mode, setMode] = useState<Mode>("search");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -41,6 +54,17 @@ export default function NewCompetitionPage() {
     setCourseName(COURSE.name);
     setTeeLabel("White (Men's Medal)");
     setHoles(deerParkHoles());
+  }
+
+  function handleCourseSelected(picked: {
+    course: NormalisedCourse;
+    tee: NormalisedTee;
+  }) {
+    setCourseName(picked.course.name);
+    setTeeLabel(picked.tee.label);
+    setHoles(holesFromTee(picked.tee));
+    setError(null);
+    setStep(2);
   }
 
   function updateHole(idx: number, field: keyof HoleRow, value: string) {
@@ -137,7 +161,7 @@ export default function NewCompetitionPage() {
           <div>
             <h1 className="text-2xl font-bold">Create a competition</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Name it, tell us the course, and which tee players will use.
+              Name it, then find your course.
             </p>
           </div>
 
@@ -156,52 +180,71 @@ export default function NewCompetitionPage() {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="courseName">
-              Course name
-            </label>
-            <input
-              id="courseName"
-              type="text"
-              className={inputCls}
-              placeholder="e.g. Deer Park Golf & Country Club"
-              value={courseName}
-              onChange={(e) => setCourseName(e.target.value)}
-              required
+          {mode === "search" ? (
+            <CourseSearch
+              onSelected={handleCourseSelected}
+              onEnterManually={() => setMode("manual")}
             />
-          </div>
+          ) : (
+            <>
+              <div>
+                <label className="block text-sm font-medium mb-1" htmlFor="courseName">
+                  Course name
+                </label>
+                <input
+                  id="courseName"
+                  type="text"
+                  className={inputCls}
+                  placeholder="e.g. Deer Park Golf & Country Club"
+                  value={courseName}
+                  onChange={(e) => setCourseName(e.target.value)}
+                  required
+                />
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="teeLabel">
-              Tee
-            </label>
-            <input
-              id="teeLabel"
-              type="text"
-              className={inputCls}
-              placeholder="e.g. White (Men's Medal)"
-              value={teeLabel}
-              onChange={(e) => setTeeLabel(e.target.value)}
-              required
-            />
-          </div>
+              <div>
+                <label className="block text-sm font-medium mb-1" htmlFor="teeLabel">
+                  Tee
+                </label>
+                <input
+                  id="teeLabel"
+                  type="text"
+                  className={inputCls}
+                  placeholder="e.g. White (Men's Medal)"
+                  value={teeLabel}
+                  onChange={(e) => setTeeLabel(e.target.value)}
+                  required
+                />
+              </div>
 
-          <button
-            type="button"
-            onClick={loadDefaults}
-            className="text-sm text-emerald-700 dark:text-emerald-400 underline"
-          >
-            Use Deer Park defaults (fills everything)
-          </button>
+              <div className="flex flex-wrap gap-3 text-sm">
+                <button
+                  type="button"
+                  onClick={loadDefaults}
+                  className="text-emerald-700 dark:text-emerald-400 underline"
+                >
+                  Use Deer Park defaults
+                </button>
+                <span className="text-gray-400">·</span>
+                <button
+                  type="button"
+                  onClick={() => setMode("search")}
+                  className="text-emerald-700 dark:text-emerald-400 underline"
+                >
+                  ← Back to course search
+                </button>
+              </div>
 
-          <button
-            type="button"
-            disabled={!courseName.trim() || !teeLabel.trim()}
-            onClick={() => setStep(2)}
-            className="w-full py-4 rounded-xl bg-emerald-600 text-white text-lg font-semibold shadow active:scale-[.98] disabled:opacity-50"
-          >
-            Next
-          </button>
+              <button
+                type="button"
+                disabled={!courseName.trim() || !teeLabel.trim()}
+                onClick={() => setStep(2)}
+                className="w-full py-4 rounded-xl bg-emerald-600 text-white text-lg font-semibold shadow active:scale-[.98] disabled:opacity-50"
+              >
+                Next
+              </button>
+            </>
+          )}
         </div>
       )}
 
@@ -210,7 +253,14 @@ export default function NewCompetitionPage() {
           <div>
             <h1 className="text-2xl font-bold">Course setup</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Enter the par and stroke index for each hole. Names are optional.
+              {courseName ? (
+                <>
+                  {courseName} — {teeLabel}. Double-check par and stroke index;
+                  add hole names if you like.
+                </>
+              ) : (
+                "Enter the par and stroke index for each hole. Names are optional."
+              )}
             </p>
           </div>
 

@@ -516,6 +516,49 @@ export async function updateCompetitionLeaderboard(id: string, show: boolean): P
   return rowToCompetition(data);
 }
 
+/**
+ * Update course details on a competition. Only permitted while the
+ * competition has zero players — once anyone has joined, the scorecard
+ * is locked so their scores remain meaningful.
+ *
+ * Throws "locked" if a player has joined; throws "not_found" if missing.
+ */
+export class CourseEditLockedError extends Error {
+  constructor() {
+    super("Cannot edit course details — a player has already joined.");
+    this.name = "CourseEditLockedError";
+  }
+}
+
+export async function updateCompetitionCourse(
+  id: string,
+  patch: { courseName: string; holeNames: string[]; tees: CompetitionTee[] },
+): Promise<Competition> {
+  requireSupabase();
+  const supabase = getSupabase();
+
+  // Guard: refuse edit if any players have already joined.
+  const { count, error: countErr } = await supabase
+    .from("players")
+    .select("id", { count: "exact", head: true })
+    .eq("competition_id", id);
+  if (countErr) throw countErr;
+  if ((count ?? 0) > 0) throw new CourseEditLockedError();
+
+  const { data, error } = await supabase
+    .from("competitions")
+    .update({
+      course_name: patch.courseName,
+      hole_names: patch.holeNames,
+      tees: patch.tees,
+    })
+    .eq("id", id)
+    .select()
+    .single<DbCompetitionRow>();
+  if (error) throw error;
+  return rowToCompetition(data);
+}
+
 export async function resetCompetition(id: string): Promise<void> {
   requireSupabase();
   const supabase = getSupabase();

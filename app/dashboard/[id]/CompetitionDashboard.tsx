@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { holesPlayed } from "@/lib/stableford";
 import { rankPlayers } from "@/lib/ranking";
 import type { Competition, Player } from "@/lib/types";
+import EditCourseModal from "./EditCourseModal";
 
 interface Props {
   competition: Competition;
@@ -27,6 +28,7 @@ export default function CompetitionDashboard({ competition, initialPlayers }: Pr
   const [players, setPlayers] = useState(initialPlayers);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editingCourse, setEditingCourse] = useState(false);
 
   const joinUrl = typeof window !== "undefined"
     ? `${window.location.origin}/c/${comp.joinCode}`
@@ -260,6 +262,35 @@ export default function CompetitionDashboard({ competition, initialPlayers }: Pr
           Show live leaderboard to players
         </label>
       </div>
+
+      {players.length === 0 && (
+        <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-700 p-4 flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <p className="text-sm font-semibold">Course details</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Tweak par, stroke index, or hole names before the first player joins.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setEditingCourse(true)}
+            className="text-xs px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 font-semibold"
+          >
+            Edit course details
+          </button>
+        </div>
+      )}
+
+      {editingCourse && (
+        <EditCourseModal
+          competition={comp}
+          onClose={() => setEditingCourse(false)}
+          onSaved={() => {
+            setEditingCourse(false);
+            refresh();
+          }}
+        />
+      )}
 
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
